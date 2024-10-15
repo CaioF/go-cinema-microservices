@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cinema-users-deployment
+  labels:
+    app: cinema-users
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cinema-users
+  template:
+    metadata:
+      labels:
+        app: cinema-users
+    spec:
+      containers:
+      - name: cinema-users
+        image: caiof/cinema-users:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        readinessProbe:
+          httpGet:
+            path: /healthy
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: cinema-users-svc
+spec: 
+  ports: 
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  selector: 
+    app: cinema-users
+  type: NodePort
